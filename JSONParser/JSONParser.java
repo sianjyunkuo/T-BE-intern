@@ -2,9 +2,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.io.IOException;
 
 public class JSONParser {
+    private static class ParseResult<T> {
+        final T value;
+        final int index;
+
+        ParseResult(T value, int index) {
+            this.value = value;
+            this.index = index;
+        }
+    }
+
     public static Map<String, Object> parse(String json) {
         ParseResult<Map<String, Object>> result = parseObject(json, 0);
         return result.value;
@@ -15,16 +24,14 @@ public class JSONParser {
         int index = start + 1; // skip the initial '{'
         while (json.charAt(index) != '}') {
             ParseResult<String> keyResult = parseString(json, index);
-            //index = keyResult.index + 1; // skip the ':' after the key
             index = keyResult.index;
-
             while (json.charAt(index) == ' ' || json.charAt(index) == ':') {
                 index++;
             }
 
             ParseResult<Object> valueResult = parseValue(json, index);
 
-            // Check for null (error condition)
+            // Check for null
             if (valueResult == null) {
                 throw new IllegalArgumentException("Failed to parse value at index " + index);
             }
@@ -35,10 +42,6 @@ public class JSONParser {
             while (json.charAt(index) == ' ' || json.charAt(index) == ',') {
                 index++;
             }
-            // if (json.charAt(index) == ',') {
-            //     index++; // skip the ','
-            // }
-
         }
         return new ParseResult<>(map, index + 1);
     }
@@ -79,30 +82,15 @@ public class JSONParser {
 
     private static ParseResult<Object> parseValue(String json, int start) {
         char c = json.charAt(start);
+
         if (c == '{') {
-            ParseResult<Map<String, Object>> result = parseObject(json, start);
-            if (result == null) {
-                return null;
-            }
-            return new ParseResult<>(result.value, result.index);
+            return parseAndWrapResult(parseObject(json, start));
         } else if (c == '[') {
-            ParseResult<List<Object>> result = parseArray(json, start);
-            if (result == null) {
-                return null;
-            }
-            return new ParseResult<>(result.value, result.index);
+            return parseAndWrapResult(parseArray(json, start));
         } else if (c == '"') {
-            ParseResult<String> result = parseString(json, start);
-            if (result == null) {
-                return null;
-            }
-            return new ParseResult<>(result.value, result.index);
+            return parseAndWrapResult(parseString(json, start));
         } else if (Character.isDigit(c)) {
-            ParseResult<Integer> result = parseInteger(json, start);
-            if (result == null) {
-                return null;
-            }
-            return new ParseResult<>(result.value, result.index);
+            return parseAndWrapResult(parseInteger(json, start));
         } else if (json.substring(start, start + 4).equals("true")) {
             return new ParseResult<>(true, start + 4);
         } else if (json.substring(start, start + 5).equals("false")) {
@@ -111,14 +99,11 @@ public class JSONParser {
         return null; // invalid input
     }
 
-    private static class ParseResult<T> {
-        final T value;
-        final int index;
-
-        ParseResult(T value, int index) {
-            this.value = value;
-            this.index = index;
+    private static <T> ParseResult<Object> parseAndWrapResult(ParseResult<T> result) {
+        if (result == null) {
+            return null;
         }
+        return new ParseResult<>(result.value, result.index);
     }
 
     public static void main(String[] args) {
