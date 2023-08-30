@@ -10,12 +10,12 @@ public class Main {
         root.left.left.left = new Node(4);
 
         // Basic Serializer Test
-        System.out.println("Basic Serializer Test");
+        // System.out.println("Basic Serializer Test");
         TreeSerializer basicSerializer = new BasicTreeSerializer();
         testTreeSerialization(basicSerializer, root);
 
         // Cyclic Serializer Test
-        System.out.println("Cyclic Serializer Test");
+        // System.out.println("Cyclic Serializer Test");
         root.right.left = root;  // Introduce a cycle
         TreeSerializer cyclicSerializer = new CyclicTreeSerializer();
         try {
@@ -27,12 +27,12 @@ public class Main {
 
     public static void testTreeSerialization(TreeSerializer serializer, Node root) {
         String serializedStr = serializer.serialize(root);
-        System.out.println("Serialized string: " + serializedStr);
+        // System.out.println("Serialized string: " + serializedStr);
 
         Node deserializedRoot = serializer.deserialize(serializedStr);
 
         String serializedAgain = serializer.serialize(deserializedRoot);
-        System.out.println("Serialized again: " + serializedAgain);
+        // System.out.println("Serialized again: " + serializedAgain);
 
         if (serializedStr.equals(serializedAgain)) {
             System.out.println("The test passed!");
